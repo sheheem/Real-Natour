@@ -1,5 +1,6 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require('../models/tour.model');
+const APIFeatures = require('../utlils/api-features');
 
 const cheapNBest = async (req, res, next) => {
   req.query.limit = '5';
@@ -9,39 +10,13 @@ const cheapNBest = async (req, res, next) => {
 
 const getAllTour = async (req, res) => {
   try {
-    // FILTERITIG BY QUERY
-    const queryObj = { ...req.query };
-    const excludeFields = ['page', 'limit', 'sort', 'fields'];
-    excludeFields.forEach((el) => delete queryObj[el]);
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .fields()
+      .paginate();
 
-    // ADVANCED FILTERING BY QUERY
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // SORTING BY QUERY
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    // LIMITING FIELDS BY QUERY
-    if (req.query.fields) {
-      const field = req.query.fields.split(',').join(' ');
-      query = query.select(field);
-    } else {
-      query = query.select('-__v');
-    }
-
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
-
-    const allTour = await query;
+    const allTour = await features.query;
 
     res.status(200).json({
       status: 'Success',
