@@ -1,33 +1,34 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require('../models/tour.model');
-// const checkId = (req, res, next) => {
-//   if (+req.params.id > tours.length) {
-//     return res.status(404).json({
-//       status: 'Fail',
-//       message: 'Invalid Id',
-//     });
-//   }
-//   next();
-// };
+
+const cheapNBest = async (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  next();
+};
 
 const getAllTour = async (req, res) => {
   try {
+    // FILTERITIG BY QUERY
     const queryObj = { ...req.query };
-    const excludeFields = ['pages', 'limit', 'sort', 'skip', 'fields'];
+    const excludeFields = ['page', 'limit', 'sort', 'fields'];
     excludeFields.forEach((el) => delete queryObj[el]);
 
+    // ADVANCED FILTERING BY QUERY
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
     let query = Tour.find(JSON.parse(queryStr));
 
+    // SORTING BY QUERY
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
     } else {
-      query = query.sort('createdAt');
+      query = query.sort('-createdAt');
     }
 
+    // LIMITING FIELDS BY QUERY
     if (req.query.fields) {
       const field = req.query.fields.split(',').join(' ');
       query = query.select(field);
@@ -35,7 +36,13 @@ const getAllTour = async (req, res) => {
       query = query.select('-__v');
     }
 
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
     const allTour = await query;
+
     res.status(200).json({
       status: 'Success',
       results: allTour.length,
@@ -128,4 +135,5 @@ module.exports = {
   updateTour,
   tourById,
   deleteTour,
+  cheapNBest,
 };
