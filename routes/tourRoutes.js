@@ -3,14 +3,16 @@ const controller = require('../controllers/tourController');
 
 const router = express.Router();
 
-// router.param('id', controller.checkId);
-router.get('/top-5-cheap', controller.cheapNBest, controller.getAllTour);
+router.route('/top-5-cheap').get(controller.cheapNBest, controller.getAllTour);
 
-router.get('/', controller.getAllTour).post('/', controller.createTour);
+router.route('/tour-stats').get(controller.getTourStats);
+
+router.route('/').get(controller.getAllTour).post(controller.createTour);
 
 router
-  .get('/:id', controller.tourById)
-  .patch('/:id', controller.updateTour)
-  .delete('/:id', controller.deleteTour);
+  .route('/:id')
+  .get(controller.tourById)
+  .patch(controller.tourById)
+  .delete(controller.deleteTour);
 
 module.exports = router;
