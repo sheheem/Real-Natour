@@ -12,9 +12,8 @@ const handleDuplicateErrorDB = (err) => {
 };
 
 const handleValidationErrorDB = (err) => {
-  console.log(err.error);
-  const errors = Object.values(err.errors).map((el) => el._message);
-  const message = `Input missing ${errors.join}`;
+  const errors = Object.values(err.errors).map((el) => el.message);
+  const message = `Input missing ${errors.join('  ')}`;
   return new AppError(message, 400);
 };
 
