@@ -1,4 +1,12 @@
+/* eslint-disable no-console */
 const dotenv = require('dotenv');
+
+process.on('uncaughtException', (err) => {
+  console.log('Unhandled Rejection: Shutting Down');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
 const { mongoConnect, mongoStatus } = require('./utlils/mongo.utlils');
 
 dotenv.config({ path: './config.env' });
@@ -13,8 +21,16 @@ const port = process.env.PORT;
 
 mongoStatus();
 
-app.listen(port, async () => {
+const server = app.listen(port, async () => {
   await mongoConnect(DB);
   // eslint-disable-next-line no-console
   console.log(`App running on port ${port}`);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.log('Unhandled Rejection: Shutting Down');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });

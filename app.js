@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const tourRoute = require('./routes/tourRoutes');
+const userRoute = require('./routes/userRoutes');
 const AppError = require('./utlils/app-error');
 const globalErrorHandler = require('./controllers/errorController');
 
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v1/tours', tourRoute);
+app.use('/api/v1/users', userRoute);
 
 app.all('*', (req, res, next) => {
   next(
