@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user.model');
@@ -44,4 +45,31 @@ exports.login = catchAsync(async (req, res, next) => {
     status: 'Success',
     token,
   });
+});
+
+exports.protectRoute = catchAsync(async (req, res, next) => {
+  if (
+    !req.headers.authorization ||
+    !req.headers.authorization.startsWith('Bearer')
+  ) {
+    return next(new AppError('Please login', 401));
+  }
+  const token = req.headers.authorization.split(' ')[1];
+  if (!token) {
+    return next(new AppError('Invalid Token', 401));
+  }
+
+  const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  if (!decode) {
+    return next(new AppError('Invalid Token', 401));
+  }
+
+  const currentUser = await User.findById(decode.id);
+
+  if (!currentUser) {
+    return next(new AppError('User no longer exist', 401));
+  }
+
+  next();
 });
