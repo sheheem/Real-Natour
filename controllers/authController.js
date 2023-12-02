@@ -80,4 +80,5 @@ exports.restrictTo =
     if (!roles.includes(req.user.role)) {
       return next(new AppError('You do not have access', 403));
     }
+    next();
   };
