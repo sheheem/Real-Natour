@@ -73,3 +73,11 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('You do not have access', 403));
+    }
+  };
