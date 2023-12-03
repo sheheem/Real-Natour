@@ -71,6 +71,7 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
     return next(new AppError('User no longer exist', 401));
   }
 
+  req.user = currentUser;
   next();
 });
 
