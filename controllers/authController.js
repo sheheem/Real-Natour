@@ -2,6 +2,7 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const User = require('../models/user.model');
 const catchAsync = require('../utlils/catchAsync');
 const AppError = require('../utlils/app-error');
@@ -83,3 +84,13 @@ exports.restrictTo =
     }
     next();
   };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError(`${req.body.email} does not exist`, 404));
+  }
+
+  const resetToken = user.createPasswordReset();
+  await user.save({ validateBeforeSave: false });
+});

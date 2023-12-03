@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const validator = require('validator');
 const bcrypt = require('bcrypt');
@@ -39,6 +40,8 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'lead-guide', 'staff', 'user'],
     default: 'user',
   },
+  passwordReset: String,
+  passwordExpires: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -55,6 +58,18 @@ userSchema.methods.correctPassword = async function (
   userPassword,
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.createPasswordReset = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordReset = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  this.passwordExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
